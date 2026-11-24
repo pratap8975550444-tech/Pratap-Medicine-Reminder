@@ -3,61 +3,46 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="24dp"
+    android:gravity="center_horizontal">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="औषधाची आठवण (Medicine Reminder)"
-        android:textSize="20sp"
+        android:text="तुमची प्रोफाईल तयार करा"
+        android:textSize="22sp"
         android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="20dp"/>
+
+    <ImageView
+        android:id="@+id/ivProfilePic"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:src="@android:drawable/ic_menu_camera"
+        android:background="#E0E0E0"
+        android:scaleType="centerCrop"
+        android:layout_marginBottom="16dp"/>
 
     <EditText
-        android:id="@+id/etMedicineName"
+        android:id="@+id/etUserName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="औषधाचे नाव टाका"
-        android:inputType="text"
-        android:padding="12dp"
-        android:layout_marginBottom="12dp" />
+        android:hint="पूर्ण नाव टाका"
+        android:inputType="textPersonName"
+        android:layout_marginBottom="12dp"/>
 
-    <TextView
-        android:id="@+id/tvSelectedTime"
-        android:layout_width="wrap_content"
+    <EditText
+        android:id="@+id/etUserAge"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="वेळ निवडलेली नाही"
-        android:textSize="16sp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="12dp" />
+        android:hint="वय टाका"
+        android:inputType="number"
+        android:layout_marginBottom="24dp"/>
 
     <Button
-        android:id="@+id/btnPickTime"
+        android:id="@+id/btnSaveProfile"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="वेळ निवडा (Select Time)"
-        android:layout_marginBottom="10dp" />
-
-    <Button
-        android:id="@+id/btnSetReminder"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="दररोजचा रिमाइंडर सेट करा"
-        android:layout_marginBottom="20dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="सेट केलेली औषधे:"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
-
-    <ListView
-        android:id="@+id/lvReminders"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:text="प्रोफाईल सेव्ह करा आणि पुढे जा"/>
 
 </LinearLayout>
