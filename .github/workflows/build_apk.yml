@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Generate Manifest, Box Border and Fix XML Links
+      - name: Generate Clean Manifest and Layouts
         run: |
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/drawable
@@ -20,8 +20,8 @@ jobs:
           # २. AndroidManifest.xml तयार करा
           printf '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="%s">\n<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n<uses-permission android:name="android.permission.CAMERA" />\n<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n<application android:allowBackup="true" android:label="Pratap Medicine Reminder" android:theme="@style/Theme.AppCompat.Light.DarkActionBar">\n<activity android:name=".CreateProfileActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity>\n<activity android:name=".MainActivity" android:exported="false" />\n<receiver android:name=".ReminderReceiver" android:enabled="true" android:exported="false" />\n</application>\n</manifest>' "$ns" > app/src/main/AndroidManifest.xml
 
-          # ३. कोणत्याही वेब लिंकशिवाय सर्व XML फाईल्स दुरुस्त करा
-          sed -i "s|xmlns:android=\"[^\"]*\"|xmlns:android=\"$ns\"|g" app/src/main/res/layout/*.xml
+          # ३. activity_main.xml तयार करा (तिन्ही बॉक्ससह: नाव + डोस + वेळ)
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="%s" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">\n<EditText android:id="@+id/etMedicineName" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="1. औषधाचे नाव (उदा. Pacimol)" android:layout_marginBottom="10dp" />\n<EditText android:id="@+id/etDosage" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="2. डोस प्रमाण (उदा. 500 mg)" android:layout_marginBottom="10dp" />\n<TextView android:id="@+id/tvSelectedTime" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:text="3. वेळ निवडलेली नाही" android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="10dp" />\n<Button android:id="@+id/btnPickTime" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="वेळ निवडा (Select Time)" />\n<Button android:id="@+id/btnSetReminder" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="औषध आणि रिमाइंडर सेव्ह करा" android:layout_marginBottom="12dp" />\n<ListView android:id="@+id/lvReminders" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />\n</LinearLayout>' "$ns" > app/src/main/res/layout/activity_main.xml
 
           # ४. activity_create_profile.xml तयार करा
           printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="%s" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="24dp" android:gravity="center_horizontal">\n<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Create Your Profile" android:textSize="22sp" android:textStyle="bold" android:layout_marginBottom="20dp" />\n<ImageView android:id="@+id/ivProfilePic" android:layout_width="110dp" android:layout_height="110dp" android:src="@android:drawable/ic_menu_camera" android:background="#E0E0E0" android:scaleType="centerCrop" android:layout_marginBottom="16dp" />\n<EditText android:id="@+id/etUserName" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="Enter Full Name" android:inputType="textPersonName" android:layout_marginBottom="12dp" />\n<EditText android:id="@+id/etUserAge" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="Enter Age" android:inputType="number" android:layout_marginBottom="24dp" />\n<Button android:id="@+id/btnSaveProfile" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Save Profile and Continue" />\n</LinearLayout>' "$ns" > app/src/main/res/layout/activity_create_profile.xml
@@ -39,4 +39,3 @@ jobs:
         with:
           name: Pratap-Medicine-Reminder-APK
           path: app/build/outputs/apk/debug/app-debug.apk
-          
