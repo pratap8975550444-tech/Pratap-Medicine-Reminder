@@ -42,7 +42,8 @@ class MainActivity : AppCompatActivity() {
 
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(35, 35, 35, 35)
+                        setPadding(35, 220, 35, 35)
+                        
         }
 
         val etName = EditText(this).apply {
