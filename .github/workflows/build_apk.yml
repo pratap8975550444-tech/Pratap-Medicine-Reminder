@@ -1,32 +1,30 @@
 name: Build Android APK
-
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Generate Clean Manifest
+      - name: Generate Clean Manifest and Layout
         run: |
-          echo "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPG1hbmlmZXN0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCI+CiAgICA8dXNlcy1wZXJtaXNzaW9uIGFuZHJvaWQ6bmFtZT0iYW5kcm9pZC5wZXJtaXNzaW9uLlBPU1RfTk9USUZJQ0FUSU9OUyIgLz4KICAgIDx1c2VzLXBlcm1pc3Npb24gYW5kcm9pZDpuYW1lPSJhbmRyb2lkLnBlcm1pc3Npb24uU0NIRURVTEVfRVhBQ1RfQUxBUk0iIC8+CiAgICA8YXBwbGljYXRpb24KICAgICAgICBhbmRyb2lkOmFsbG93QmFja3VwPSJ0cnVlIgogICAgICAgIGFuZHJvaWQ6bGFiZWw9IlByYXRhcCBNZWRpY2luZSBSZW1pbmRlciIKICAgICAgICBhbmRyb2lkOnN1cHBvcnRzUnRsPSJ0cnVlIgogICAgICAgIGFuZHJvaWQ6dGhlbWU9IkBzdHlsZS9UaGVtZS5BcHBDb21wYXQuTGlnaHQuRGFya0FjdGlvbkJhciI+CiAgICAgICAgPGFjdGl2aXR5CiAgICAgICAgICAgIGFuZHJvaWQ6bmFtZT0iLk1haW5BY3Rpdml0eSIKICAgICAgICAgICAgYW5kcm9pZDpleHBvcnRlZD0idHJ1ZSI+CiAgICAgICAgICAgIDxpbnRlbnQtZmlsdGVyPgogICAgICAgICAgICAgICAgPGFjdGlvbiBhbmRyb2lkOm5hbWU9ImFuZHJvaWQuaW50ZW50LmFjdGlvbi5NQUlOIiAvPgogICAgICAgICAgICAgICAgPGNhdGVnb3J5IGFuZHJvaWQ6bmFtZT0iYW5kcm9pZC5pbnRlbnQuY2F0ZWdvcnkuTEFVTkNIRVIiIC8+CiAgICAgICAgICAgIDwvaW50ZW50LWZpbHRlcj4KICAgICAgICA8L2FjdGl2aXR5PgogICAgICAgIDxyZWNlaXZlcgogICAgICAgICAgICBhbmRyb2lkOm5hbWU9Ii5SZW1pbmRlclJlY2VpdmVyIgogICAgICAgICAgICBhbmRyb2lkOmVuYWJsZWQ9InRydWUiCiAgICAgICAgICAgIGFuZHJvaWQ6ZXhwb3J0ZWQ9ImZhbHNlIiAvPgogICAgPC9hcHBsaWNhdGlvbj4KPC9tYW5pZmVzdD4K" | base64 -d > app/src/main/AndroidManifest.xml
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+          mkdir -p app/src/main/res/layout
+          ns=$(python3 -c 'print(bytes.fromhex("687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f6964").decode())')
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="%s">\n<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n<application android:allowBackup="true" android:label="Pratap Medicine Reminder" android:theme="@style/Theme.AppCompat.Light.DarkActionBar">\n<activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity>\n<receiver android:name=".ReminderReceiver" android:enabled="true" android:exported="false" />\n</application>\n</manifest>' "$ns" > app/src/main/AndroidManifest.xml
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="%s" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="20dp">\n<EditText android:id="@+id/etMedicineName" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Enter Medicine Name" />\n<TextView android:id="@+id/tvSelectedTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="No Time Selected" />\n<Button android:id="@+id/btnPickTime" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Select Time" />\n<Button android:id="@+id/btnSetReminder" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Set Daily Reminder" />\n<ListView android:id="@+id/lvReminders" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />\n</LinearLayout>' "$ns" > app/src/main/res/layout/activity_main.xml
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.5'
           cache-disabled: true
-      - name: Build Debug APK
-        run: gradle assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - run: gradle assembleDebug
+      - uses: actions/upload-artifact@v4
         with:
           name: Pratap-Medicine-Reminder-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+          
