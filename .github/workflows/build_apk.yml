@@ -8,19 +8,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Generate Clean Manifest and Fix XML Links
+      - name: Generate Manifest, Box Border and Fix XML Links
         run: |
           mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/drawable
           ns=$(python3 -c 'print(bytes.fromhex("687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f6964").decode())')
           
-          # १. AndroidManifest.xml तयार करा
+          # १. बॉक्ससाठी सुंदर बॉर्डर (box_border.xml) तयार करा
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<shape xmlns:android="%s" android:shape="rectangle">\n<solid android:color="#FFFFFF" />\n<stroke android:width="2dp" android:color="#1976D2" />\n<corners android:radius="8dp" />\n<padding android:left="12dp" android:top="12dp" android:right="12dp" android:bottom="12dp" />\n</shape>' "$ns" > app/src/main/res/drawable/box_border.xml
+
+          # २. AndroidManifest.xml तयार करा
           printf '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="%s">\n<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n<uses-permission android:name="android.permission.CAMERA" />\n<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n<application android:allowBackup="true" android:label="Pratap Medicine Reminder" android:theme="@style/Theme.AppCompat.Light.DarkActionBar">\n<activity android:name=".CreateProfileActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity>\n<activity android:name=".MainActivity" android:exported="false" />\n<receiver android:name=".ReminderReceiver" android:enabled="true" android:exported="false" />\n</application>\n</manifest>' "$ns" > app/src/main/AndroidManifest.xml
 
-          # २. तुमची स्वतःची activity_main.xml सुरक्षित ठेवा आणि फक्त तिची लिंक दुरुस्त करा
+          # ३. सर्व लेआउट फाईल्समधील लिंक दुरुस्त करा
           sed -i "s|http://android.com|$ns|g" app/src/main/res/layout/*.xml
 
-          # ३. activity_create_profile.xml तयार करा
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="%s" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="24dp" android:gravity="center_horizontal">\n<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Create Your Profile" android:textSize="22sp" android:textStyle="bold" android:layout_marginBottom="20dp" />\n<ImageView android:id="@+id/ivProfilePic" android:layout_width="110dp" android:layout_height="110dp" android:src="@android:drawable/ic_menu_camera" android:background="#E0E0E0" android:scaleType="centerCrop" android:layout_marginBottom="16dp" />\n<EditText android:id="@+id/etUserName" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Enter Full Name" android:inputType="textPersonName" android:layout_marginBottom="12dp" />\n<EditText android:id="@+id/etUserAge" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Enter Age" android:inputType="number" android:layout_marginBottom="24dp" />\n<Button android:id="@+id/btnSaveProfile" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Save Profile and Continue" />\n</LinearLayout>' "$ns" > app/src/main/res/layout/activity_create_profile.xml
+          # ४. activity_create_profile.xml तयार करा
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="%s" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="24dp" android:gravity="center_horizontal">\n<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Create Your Profile" android:textSize="22sp" android:textStyle="bold" android:layout_marginBottom="20dp" />\n<ImageView android:id="@+id/ivProfilePic" android:layout_width="110dp" android:layout_height="110dp" android:src="@android:drawable/ic_menu_camera" android:background="#E0E0E0" android:scaleType="centerCrop" android:layout_marginBottom="16dp" />\n<EditText android:id="@+id/etUserName" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="Enter Full Name" android:inputType="textPersonName" android:layout_marginBottom="12dp" />\n<EditText android:id="@+id/etUserAge" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="Enter Age" android:inputType="number" android:layout_marginBottom="24dp" />\n<Button android:id="@+id/btnSaveProfile" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Save Profile and Continue" />\n</LinearLayout>' "$ns" > app/src/main/res/layout/activity_create_profile.xml
 
       - uses: actions/setup-java@v4
         with:
