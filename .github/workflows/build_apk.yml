@@ -10,33 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix AndroidManifest Namespace
+      - name: Generate Clean Manifest
         run: |
-          cat << 'EOF' > app/src/main/AndroidManifest.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://android.com">
-              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-              <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-              <application
-                  android:allowBackup="true"
-                  android:label="Pratap Medicine Reminder"
-                  android:supportsRtl="true"
-                  android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-                  <receiver
-                      android:name=".ReminderReceiver"
-                      android:enabled="true"
-                      android:exported="false" />
-              </application>
-          </manifest>
-          EOF
+          echo "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPG1hbmlmZXN0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCI+CiAgICA8dXNlcy1wZXJtaXNzaW9uIGFuZHJvaWQ6bmFtZT0iYW5kcm9pZC5wZXJtaXNzaW9uLlBPU1RfTk9USUZJQ0FUSU9OUyIgLz4KICAgIDx1c2VzLXBlcm1pc3Npb24gYW5kcm9pZDpuYW1lPSJhbmRyb2lkLnBlcm1pc3Npb24uU0NIRURVTEVfRVhBQ1RfQUxBUk0iIC8+CiAgICA8YXBwbGljYXRpb24KICAgICAgICBhbmRyb2lkOmFsbG93QmFja3VwPSJ0cnVlIgogICAgICAgIGFuZHJvaWQ6bGFiZWw9IlByYXRhcCBNZWRpY2luZSBSZW1pbmRlciIKICAgICAgICBhbmRyb2lkOnN1cHBvcnRzUnRsPSJ0cnVlIgogICAgICAgIGFuZHJvaWQ6dGhlbWU9IkBzdHlsZS9UaGVtZS5BcHBDb21wYXQuTGlnaHQuRGFya0FjdGlvbkJhciI+CiAgICAgICAgPGFjdGl2aXR5CiAgICAgICAgICAgIGFuZHJvaWQ6bmFtZT0iLk1haW5BY3Rpdml0eSIKICAgICAgICAgICAgYW5kcm9pZDpleHBvcnRlZD0idHJ1ZSI+CiAgICAgICAgICAgIDxpbnRlbnQtZmlsdGVyPgogICAgICAgICAgICAgICAgPGFjdGlvbiBhbmRyb2lkOm5hbWU9ImFuZHJvaWQuaW50ZW50LmFjdGlvbi5NQUlOIiAvPgogICAgICAgICAgICAgICAgPGNhdGVnb3J5IGFuZHJvaWQ6bmFtZT0iYW5kcm9pZC5pbnRlbnQuY2F0ZWdvcnkuTEFVTkNIRVIiIC8+CiAgICAgICAgICAgIDwvaW50ZW50LWZpbHRlcj4KICAgICAgICA8L2FjdGl2aXR5PgogICAgICAgIDxyZWNlaXZlcgogICAgICAgICAgICBhbmRyb2lkOm5hbWU9Ii5SZW1pbmRlclJlY2VpdmVyIgogICAgICAgICAgICBhbmRyb2lkOmVuYWJsZWQ9InRydWUiCiAgICAgICAgICAgIGFuZHJvaWQ6ZXhwb3J0ZWQ9ImZhbHNlIiAvPgogICAgPC9hcHBsaWNhdGlvbj4KPC9tYW5pZmVzdD4K" | base64 -d > app/src/main/AndroidManifest.xml
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
