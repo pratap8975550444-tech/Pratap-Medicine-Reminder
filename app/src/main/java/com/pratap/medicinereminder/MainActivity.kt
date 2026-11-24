@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -42,9 +43,13 @@ class MainActivity : AppCompatActivity() {
 
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-                        setPadding(35, 220, 35, 35)
-                        
+            setPadding(35, 35, 35, 35)
         }
+
+        val topSpace = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 160)
+        }
+        layout.addView(topSpace)
 
         val etName = EditText(this).apply {
             hint = "1. औषधाचे नाव (उदा. Pacimol)"
@@ -58,12 +63,12 @@ class MainActivity : AppCompatActivity() {
 
         val tvTime = TextView(this).apply {
             text = "3. वेळ निवडलेली नाही"
-            textSize = 18f
-            setPadding(10, 20, 10, 20)
+            textSize = 16f
+            setPadding(10, 15, 10, 15)
         }
 
         val btnTime = Button(this).apply { text = "वेळ निवडा (Time)" }
-        val btnSave = Button(this).apply { text = "औषध सेव्ह करा" }
+        val btnSave = Button(this).apply { text = "नवीन औषध सेव्ह करा" }
         val lv = ListView(this)
 
         layout.addView(etName)
@@ -73,7 +78,6 @@ class MainActivity : AppCompatActivity() {
         layout.addView(btnSave)
         layout.addView(lv)
         setContentView(layout)
-
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
         lv.adapter = adapter
 
@@ -124,7 +128,7 @@ class MainActivity : AppCompatActivity() {
 
         val e1 = EditText(this).apply { setText(p2.getOrElse(0) { "" }) }
         val e2 = EditText(this).apply { setText(p2.getOrElse(1) { "" }) }
-        val e3 = EditText(this).apply { setText(p1.getOrElse(1) { "08:00" }) }
+        val e3 = EditText(this).apply { setText(p1.getOrElse(1) { "10:00" }) }
         box.addView(e1); box.addView(e2); box.addView(e3)
 
         AlertDialog.Builder(this)
@@ -136,7 +140,6 @@ class MainActivity : AppCompatActivity() {
                 saveData()
             }.setNegativeButton("Cancel", null).show()
     }
-
     private fun addAlarm(n: String, d: String, h: Int, m: Int) {
         val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         if (Build.VERSION.SDK_INT >= 31 && !am.canScheduleExactAlarms()) {
@@ -172,7 +175,7 @@ class MainActivity : AppCompatActivity() {
         val pi = PendingIntent.getBroadcast(this, codes.getOrElse(pos) { 0 }, Intent(this, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         am.cancel(pi)
         list.removeAt(pos)
-        codes.removeAt(pos)
+        codes.removeAt(position = pos)
         adapter.notifyDataSetChanged()
         saveData()
     }
@@ -190,8 +193,33 @@ class MainActivity : AppCompatActivity() {
     private fun loadData() {
         val p = getSharedPreferences("MedicinePrefs", Context.MODE_PRIVATE)
         list.clear(); codes.clear()
-        for (i in 0 until p.getInt("COUNT", 0)) {
-            p.getString("ITEM_$i", null)?.let { list.add(it); codes.add(p.getInt("CODE_$i", 0)) }
+        val count = p.getInt("COUNT", 0)
+        if (count == 0 && !p.getBoolean("INIT_DONE", false)) {
+            val defaultMeds = arrayOf(
+                "PANGRAF - 4 mg | वेळ: 10:00",
+                "MYCEPT - 360/720 mg | वेळ: 10:00",
+                "OMNACORTIL - 10 mg | वेळ: 10:00",
+                "VALGAN - 450 mg | वेळ: 10:00",
+                "PAN - 40 mg | वेळ: 10:00",
+                "PACIMOL - 500 mg | वेळ: 10:00",
+                "STAMLO - 2.5 mg | वेळ: 10:00",
+                "BACTRIM DS - 1 Tab | वेळ: 10:00",
+                "SUPRACAL - 1 Tab | वेळ: 10:00",
+                "ECOSPRIN - 1 Tab | वेळ: 22:00",
+                "BECOSULE - 1 Cap | वेळ: 10:00",
+                "CETOLAC - 1 Tab | वेळ: 10:00",
+                "CANDID MOUTH WASH - Use | वेळ: 10:00"
+            )
+            for (med in defaultMeds) {
+                list.add(med)
+                codes.add(0)
+            }
+                        p.edit().putBoolean("INIT_DONE", true).apply()
+            saveData()
+        } else {
+            for (i in 0 until count) {
+                p.getString("ITEM_$i", null)?.let { list.add(it); codes.add(p.getInt("CODE_$i", 0)) }
+            }
         }
         adapter.notifyDataSetChanged()
     }
@@ -205,3 +233,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
