@@ -8,34 +8,175 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Generate Clean Manifest and Layouts
+      - name: Auto Generate All App Files
         run: |
           mkdir -p app/src/main/res/layout
-          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/java/com/pratap/medicinereminder
           ns=$(python3 -c 'print(bytes.fromhex("687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f6964").decode())')
-          
-          # १. बॉक्स बॉर्डर (box_border.xml) तयार करा
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<shape xmlns:android="%s" android:shape="rectangle">\n<solid android:color="#FFFFFF" />\n<stroke android:width="2dp" android:color="#1976D2" />\n<corners android:radius="8dp" />\n<padding android:left="12dp" android:top="12dp" android:right="12dp" android:bottom="12dp" />\n</shape>' "$ns" > app/src/main/res/drawable/box_border.xml
 
-          # २. AndroidManifest.xml तयार करा
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="%s">\n<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n<uses-permission android:name="android.permission.CAMERA" />\n<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />\n<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />\n<application android:allowBackup="true" android:label="Pratap Medicine Reminder" android:theme="@style/Theme.AppCompat.Light.DarkActionBar">\n<activity android:name=".CreateProfileActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity>\n<activity android:name=".MainActivity" android:exported="false" />\n<receiver android:name=".ReminderReceiver" android:enabled="true" android:exported="false" />\n</application>\n</manifest>' "$ns" > app/src/main/AndroidManifest.xml
+          # १. AndroidManifest.xml तयार करा
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="%s">\n<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n<application android:allowBackup="true" android:label="Pratap Medicine Reminder" android:theme="@style/Theme.AppCompat.Light.DarkActionBar">\n<activity android:name=".CreateProfileActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity>\n<activity android:name=".MainActivity" android:exported="false" />\n<receiver android:name=".ReminderReceiver" android:enabled="true" android:exported="false" />\n</application>\n</manifest>' "$ns" > app/src/main/AndroidManifest.xml
 
-          # ३. activity_main.xml तयार करा (तिन्ही बॉक्ससह: नाव + डोस + वेळ)
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="%s" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">\n<EditText android:id="@+id/etMedicineName" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="1. औषधाचे नाव (उदा. Pacimol)" android:layout_marginBottom="10dp" />\n<EditText android:id="@+id/etDosage" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="2. डोस प्रमाण (उदा. 500 mg)" android:layout_marginBottom="10dp" />\n<TextView android:id="@+id/tvSelectedTime" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:text="3. वेळ निवडलेली नाही" android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="10dp" />\n<Button android:id="@+id/btnPickTime" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="वेळ निवडा (Select Time)" />\n<Button android:id="@+id/btnSetReminder" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="औषध आणि रिमाइंडर सेव्ह करा" android:layout_marginBottom="12dp" />\n<ListView android:id="@+id/lvReminders" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />\n</LinearLayout>' "$ns" > app/src/main/res/layout/activity_main.xml
+          # २. activity_create_profile.xml तयार करा
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="%s" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="24dp" android:gravity="center_horizontal">\n<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Create Your Profile" android:textSize="22sp" android:textStyle="bold" android:layout_marginBottom="20dp" />\n<ImageView android:id="@+id/ivProfilePic" android:layout_width="110dp" android:layout_height="110dp" android:src="@android:drawable/ic_menu_camera" android:background="#E0E0E0" android:scaleType="centerCrop" android:layout_marginBottom="16dp" />\n<EditText android:id="@+id/etUserName" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Enter Full Name" android:inputType="textPersonName" android:layout_marginBottom="12dp" />\n<EditText android:id="@+id/etUserAge" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Enter Age" android:inputType="number" android:layout_marginBottom="24dp" />\n<Button android:id="@+id/btnSaveProfile" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Save Profile and Continue" />\n</LinearLayout>' "$ns" > app/src/main/res/layout/activity_create_profile.xml
 
-          # ४. activity_create_profile.xml तयार करा
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<LinearLayout xmlns:android="%s" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="24dp" android:gravity="center_horizontal">\n<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Create Your Profile" android:textSize="22sp" android:textStyle="bold" android:layout_marginBottom="20dp" />\n<ImageView android:id="@+id/ivProfilePic" android:layout_width="110dp" android:layout_height="110dp" android:src="@android:drawable/ic_menu_camera" android:background="#E0E0E0" android:scaleType="centerCrop" android:layout_marginBottom="16dp" />\n<EditText android:id="@+id/etUserName" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="Enter Full Name" android:inputType="textPersonName" android:layout_marginBottom="12dp" />\n<EditText android:id="@+id/etUserAge" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/box_border" android:hint="Enter Age" android:inputType="number" android:layout_marginBottom="24dp" />\n<Button android:id="@+id/btnSaveProfile" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Save Profile and Continue" />\n</LinearLayout>' "$ns" > app/src/main/res/layout/activity_create_profile.xml
+          # ३. संपूर्ण MainActivity.kt आपोआप तयार करा
+          cat << 'EOF' > app/src/main/java/com/pratap/medicinereminder/MainActivity.kt
+          package com.pratap.medicinereminder
 
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.5'
-          cache-disabled: true
-      - run: gradle assembleDebug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Pratap-Medicine-Reminder-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          import android.Manifest
+          import android.app.AlarmManager
+          import android.app.AlertDialog
+          import android.app.PendingIntent
+          import android.app.TimePickerDialog
+          import android.content.Context
+          import android.content.Intent
+          import android.content.pm.PackageManager
+          import android.os.Build
+          import android.os.Bundle
+          import android.provider.Settings
+          import android.view.View
+          import android.widget.ArrayAdapter
+          import android.widget.Button
+          import android.widget.EditText
+          import android.widget.LinearLayout
+          import android.widget.ListView
+          import android.widget.TextView
+          import android.widget.Toast
+          import androidx.appcompat.app.AppCompatActivity
+          import androidx.core.app.ActivityCompat
+          import androidx.core.content.ContextCompat
+          import java.util.Calendar
+          import java.util.Locale
+
+          class MainActivity : AppCompatActivity() {
+
+              private var hour = -1
+              private var minute = -1
+              private val list = ArrayList<String>()
+              private val codes = ArrayList<Int>()
+              private lateinit var adapter: ArrayAdapter<String>
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+
+                  val pref = getSharedPreferences("UserProfile", Context.MODE_PRIVATE)
+                  val uName = pref.getString("userName", "Pratap")
+                  val uAge = pref.getString("userAge", "")
+                  supportActionBar?.title = "$uName ($uAge)"
+
+                  val layout = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setPadding(35, 35, 35, 35)
+                  }
+
+                  val topSpace = View(this).apply {
+                      layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 160)
+                  }
+                  layout.addView(topSpace)
+
+                  val etName = EditText(this).apply {
+                      hint = "1. औषधाचे नाव (उदा. Pacimol)"
+                      setBackgroundResource(android.R.drawable.edit_text)
+                  }
+
+                  val etDose = EditText(this).apply {
+                      hint = "2. डोस प्रमाण (उदा. 500 mg)"
+                      setBackgroundResource(android.R.drawable.edit_text)
+                  }
+
+                  val tvTime = TextView(this).apply {
+                      text = "3. वेळ निवडलेली नाही"
+                      textSize = 16f
+                      setPadding(10, 15, 10, 15)
+                  }
+
+                  val btnTime = Button(this).apply { text = "वेळ निवडा (Time)" }
+                  val btnSave = Button(this).apply { text = "नवीन औषध सेव्ह करा" }
+                  val lv = ListView(this)
+
+                  layout.addView(etName)
+                  layout.addView(etDose)
+                  layout.addView(tvTime)
+                  layout.addView(btnTime)
+                  layout.addView(btnSave)
+                  layout.addView(lv)
+                  setContentView(layout)
+
+                  adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
+                  lv.adapter = adapter
+
+                  loadData()
+                  askPerm()
+
+                  btnTime.setOnClickListener {
+                      val c = Calendar.getInstance()
+                      TimePickerDialog(this, { _, h, m ->
+                          hour = h
+                          minute = m
+                          tvTime.text = String.format(Locale.getDefault(), "वेळ: %02d:%02d", h, m)
+                      }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), false).show()
+                  }
+
+                  btnSave.setOnClickListener {
+                      val n = etName.text.toString().trim()
+                      val d = etDose.text.toString().trim()
+                      if (n.isEmpty() || d.isEmpty() || hour == -1) {
+                          Toast.makeText(this, "नाव, डोस आणि वेळ तिन्ही भरा", Toast.LENGTH_SHORT).show()
+                          return@setOnClickListener
+                      }
+                      addAlarm(n, d, hour, minute)
+                      etName.text.clear()
+                      etDose.text.clear()
+                      tvTime.text = "3. वेळ निवडलेली नाही"
+                      hour = -1
+                  }
+
+                  lv.setOnItemClickListener { _, _, pos, _ ->
+                      val items = arrayOf("Edit (बदल करा)", "Delete (काढून टाका)")
+                      AlertDialog.Builder(this)
+                          .setTitle("पर्याय निवडा")
+                          .setItems(items) { _, w ->
+                              if (w == 0) editItem(pos) else deleteItem(pos)
+                          }.show()
+                  }
+              }
+
+              private fun editItem(pos: Int) {
+                  val box = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setPadding(40, 20, 40, 10)
+                  }
+                  val old = list.getOrElse(pos) { "" }
+                  val p1 = old.split(" | वेळ: ")
+                  val p2 = p1.getOrElse(0) { "" }.split(" - ")
+
+                  val e1 = EditText(this).apply { setText(p2.getOrElse(0) { "" }) }
+                  val e2 = EditText(this).apply { setText(p2.getOrElse(1) { "" }) }
+                  val e3 = EditText(this).apply { setText(p1.getOrElse(1) { "10:00" }) }
+                  box.addView(e1); box.addView(e2); box.addView(e3)
+
+                  AlertDialog.Builder(this)
+                      .setTitle("औषध बदला")
+                      .setView(box)
+                      .setPositiveButton("Save") { _, _ ->
+                          list.set(pos, "${e1.text} - ${e2.text} | वेळ: ${e3.text}")
+                          adapter.notifyDataSetChanged()
+                          saveData()
+                      }.setNegativeButton("Cancel", null).show()
+              }
+
+              private fun addAlarm(n: String, d: String, h: Int, m: Int) {
+                  val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                  if (Build.VERSION.SDK_INT >= 31 && !am.canScheduleExactAlarms()) {
+                      startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+                      return
+                  }
+                  val cal = Calendar.getInstance().apply {
+                      set(Calendar.HOUR_OF_DAY, h)
+                      set(Calendar.MINUTE, m)
+                      set(Calendar.SECOND, 0)
+                      if (before(Calendar.getInstance())) add(Calendar.DATE, 1)
+                  }
+                  val code = System.currentTimeMillis().toInt()
+                  val i = Intent(this, ReminderReceiver::class.java).apply {
