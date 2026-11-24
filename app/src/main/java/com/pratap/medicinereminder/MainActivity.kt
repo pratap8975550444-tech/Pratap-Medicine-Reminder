@@ -26,232 +26,181 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    private var selectedHour: Int = -1
-    private var selectedMinute: Int = -1
-
-    private val reminderList = ArrayList<String>()
-    private val requestCodeList = ArrayList<Int>()
+    private var hour = -1
+    private var minute = -1
+    private val list = ArrayList<String>()
+    private val codes = ArrayList<Int>()
     private lateinit var adapter: ArrayAdapter<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // प्रोफाईलचे नाव वरच्या पट्टीवर दाखवा
-        val profilePref = getSharedPreferences("UserProfile", Context.MODE_PRIVATE)
-        val userName = profilePref.getString("userName", "Pratap")
-        val userAge = profilePref.getString("userAge", "")
-        supportActionBar?.title = "$userName ($userAge वर्षे)"
+        val pref = getSharedPreferences("UserProfile", Context.MODE_PRIVATE)
+        val uName = pref.getString("userName", "Pratap")
+        val uAge = pref.getString("userAge", "")
+        supportActionBar?.title = "$uName ($uAge)"
 
-        // थेट कोटलिनमधूनच तिन्ही बॉक्स आणि बटणे तयार करणे
-        val mainLayout = LinearLayout(this).apply {
+        val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(40, 40, 40, 40)
+            setPadding(35, 35, 35, 35)
         }
 
-        val etMedicineName = EditText(this).apply {
-            hint = "1. औषधाचे नाव टाका (उदा. Pacimol)"
+        val etName = EditText(this).apply {
+            hint = "1. औषधाचे नाव (उदा. Pacimol)"
             setBackgroundResource(android.R.drawable.edit_text)
         }
 
-        val etDosage = EditText(this).apply {
-            hint = "2. डोस प्रमाण टाका (उदा. 500 mg)"
+        val etDose = EditText(this).apply {
+            hint = "2. डोस प्रमाण (उदा. 500 mg)"
             setBackgroundResource(android.R.drawable.edit_text)
         }
 
-        val tvSelectedTime = TextView(this).apply {
+        val tvTime = TextView(this).apply {
             text = "3. वेळ निवडलेली नाही"
             textSize = 18f
             setPadding(10, 20, 10, 20)
         }
 
-        val btnPickTime = Button(this).apply {
-            text = "वेळ निवडा (Select Time)"
+        val btnTime = Button(this).apply { text = "वेळ निवडा (Time)" }
+        val btnSave = Button(this).apply { text = "औषध सेव्ह करा" }
+        val lv = ListView(this)
+
+        layout.addView(etName)
+        layout.addView(etDose)
+        layout.addView(tvTime)
+        layout.addView(btnTime)
+        layout.addView(btnSave)
+        layout.addView(lv)
+        setContentView(layout)
+
+        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
+        lv.adapter = adapter
+
+        loadData()
+        askPerm()
+
+        btnTime.setOnClickListener {
+            val c = Calendar.getInstance()
+            TimePickerDialog(this, { _, h, m ->
+                hour = h
+                minute = m
+                tvTime.text = String.format(Locale.getDefault(), "वेळ: %02d:%02d", h, m)
+            }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), false).show()
         }
 
-        val btnSetReminder = Button(this).apply {
-            text = "औषध सेव्ह करा"
-        }
-
-        val lvReminders = ListView(this)
-
-        mainLayout.addView(etMedicineName)
-        mainLayout.addView(etDosage)
-        mainLayout.addView(tvSelectedTime)
-        mainLayout.addView(btnPickTime)
-        mainLayout.addView(btnSetReminder)
-        mainLayout.addView(lvReminders)
-
-        setContentView(mainLayout)
-
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, reminderList)
-        lvReminders.adapter = adapter
-
-        loadSavedReminders()
-        requestNotificationPermission()
-
-        // वेळ निवडणे
-        btnPickTime.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            TimePickerDialog(this, { _, hourOfDay, minute ->
-                selectedHour = hourOfDay
-                selectedMinute = minute
-                tvSelectedTime.text = String.format(
-                    Locale.getDefault(),
-                    "निवडलेली वेळ: %02d:%02d",
-                    selectedHour,
-                    selectedMinute
-                )
-            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), false).show()
-        }
-
-        // औषध सेव्ह करणे
-        btnSetReminder.setOnClickListener {
-            val name = etMedicineName.text.toString().trim()
-            val dose = etDosage.text.toString().trim()
-
-            if (name.isEmpty() || dose.isEmpty()) {
-                Toast.makeText(this, "कृपया नाव आणि डोस दोन्ही भरा", Toast.LENGTH_SHORT).show()
+        btnSave.setOnClickListener {
+            val n = etName.text.toString().trim()
+            val d = etDose.text.toString().trim()
+            if (n.isEmpty() || d.isEmpty() || hour == -1) {
+                Toast.makeText(this, "नाव, डोस आणि वेळ तिन्ही भरा", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            if (selectedHour == -1) {
-                Toast.makeText(this, "कृपया वेळ निवडा", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            scheduleMedicineReminder(name, dose, selectedHour, selectedMinute)
-            etMedicineName.text.clear()
-            etDosage.text.clear()
-            tvSelectedTime.text = "3. वेळ निवडलेली नाही"
-            selectedHour = -1
+            addAlarm(n, d, hour, minute)
+            etName.text.clear()
+            etDose.text.clear()
+            tvTime.text = "3. वेळ निवडलेली नाही"
+            hour = -1
         }
 
-        // यादीतील औषधावर क्लिक केल्यास Edit किंवा Delete करणे
-        lvReminders.setOnItemClickListener { _, _, position, _ ->
-            val options = arrayOf("Edit (बदल करा)", "Delete (डिलीट करा)")
+        lv.setOnItemClickListener { _, _, pos, _ ->
+            val items = arrayOf("Edit (बदल करा)", "Delete (काढून टाका)")
             AlertDialog.Builder(this)
                 .setTitle("पर्याय निवडा")
-                .setItems(options) { _, which ->
-                    if (which == 0) showEditDialog(position)
-                    else cancelReminder(position)
-                }
-                .show()
+                .setItems(items) { _, w ->
+                    if (w == 0) editItem(pos) else deleteItem(pos)
+                }.show()
         }
     }
 
-    private fun showEditDialog(position: Int) {
-        val currentText = reminderList.getOrElse(position) { "" }
-        val mainParts = currentText.split(" | वेळ: ")
-        val firstPart = mainParts.getOrElse(0) { "" }
-        val nameAndDose = firstPart.split(" - ")
-
-        val layout = LinearLayout(this).apply {
+    private fun editItem(pos: Int) {
+        val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(50, 30, 50, 10)
+            setPadding(40, 20, 40, 10)
         }
+        val old = list.getOrElse(pos) { "" }
+        val p1 = old.split(" | वेळ: ")
+        val p2 = p1.getOrElse(0) { "" }.split(" - ")
 
-        val inputName = EditText(this).apply { setText(nameAndDose.getOrElse(0) { "" }) }
-        val inputDose = EditText(this).apply { setText(nameAndDose.getOrElse(1) { "" }) }
-        val inputTime = EditText(this).apply { setText(mainParts.getOrElse(1) { "08:00" }) }
-
-        layout.addView(inputName)
-        layout.addView(inputDose)
-        layout.addView(inputTime)
+        val e1 = EditText(this).apply { setText(p2.getOrElse(0) { "" }) }
+        val e2 = EditText(this).apply { setText(p2.getOrElse(1) { "" }) }
+        val e3 = EditText(this).apply { setText(p1.getOrElse(1) { "08:00" }) }
+        box.addView(e1); box.addView(e2); box.addView(e3)
 
         AlertDialog.Builder(this)
             .setTitle("औषध बदला")
-            .setView(layout)
+            .setView(box)
             .setPositiveButton("Save") { _, _ ->
-                val newName = inputName.text.toString().trim()
-                val newDose = inputDose.text.toString().trim()
-                val newTime = inputTime.text.toString().trim()
-                if (newName.isNotEmpty() && newDose.isNotEmpty()) {
-                    reminderList.set(position, "$newName - $newDose | वेळ: $newTime")
-                    adapter.notifyDataSetChanged()
-                    saveReminders()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+                list.set(pos, "${e1.text} - ${e2.text} | वेळ: ${e3.text}")
+                adapter.notifyDataSetChanged()
+                saveData()
+            }.setNegativeButton("Cancel", null).show()
     }
 
-    private fun scheduleMedicineReminder(name: String, dose: String, hour: Int, minute: Int) {
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+    private fun addAlarm(n: String, d: String, h: Int, m: Int) {
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if (Build.VERSION.SDK_INT >= 31 && !am.canScheduleExactAlarms()) {
             startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
             return
         }
-
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, h)
+            set(Calendar.MINUTE, m)
             set(Calendar.SECOND, 0)
             if (before(Calendar.getInstance())) add(Calendar.DATE, 1)
         }
-
-        val requestCode = System.currentTimeMillis().toInt()
-        val intent = Intent(this, ReminderReceiver::class.java).apply {
-            putExtra("MEDICINE_NAME", "$name ($dose)")
-            putExtra("HOUR", hour)
-            putExtra("MINUTE", minute)
-            putExtra("REQUEST_CODE", requestCode)
+        val code = System.currentTimeMillis().toInt()
+        val i = Intent(this, ReminderReceiver::class.java).apply {
+            putExtra("MEDICINE_NAME", "$n ($d)")
+            putExtra("HOUR", h)
+            putExtra("MINUTE", m)
+            putExtra("REQUEST_CODE", code)
         }
+        val pi = PendingIntent.getBroadcast(this, code, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pi)
 
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
-
-        val timeText = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
-        reminderList.add("$name - $dose | वेळ: $timeText")
-        requestCodeList.add(requestCode)
+        val t = String.format(Locale.getDefault(), "%02d:%02d", h, m)
+        list.add("$n - $d | वेळ: $t")
+        codes.add(code)
         adapter.notifyDataSetChanged()
-        saveReminders()
+        saveData()
         Toast.makeText(this, "सेव्ह झाले!", Toast.LENGTH_SHORT).show()
     }
 
-    private fun cancelReminder(position: Int) {
-        val requestCode = requestCodeList.getOrElse(position) { 0 }
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, requestCode, Intent(this, ReminderReceiver::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.cancel(pendingIntent)
-        reminderList.removeAt(position)
-        requestCodeList.removeAt(position)
+    private fun deleteItem(pos: Int) {
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pi = PendingIntent.getBroadcast(this, codes.getOrElse(pos) { 0 }, Intent(this, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        am.cancel(pi)
+        list.removeAt(pos)
+        codes.removeAt(pos)
         adapter.notifyDataSetChanged()
-        saveReminders()
-        Toast.makeText(this, "डिलीट केले", Toast.LENGTH_SHORT).show()
+        saveData()
     }
 
-    private fun saveReminders() {
-        val prefs = getSharedPreferences("MedicinePrefs", Context.MODE_PRIVATE)
-        val editor = prefs.edit()
-        editor.putInt("COUNT", reminderList.size)
-        for (i in reminderList.indices) {
-            editor.putString("ITEM_$i", reminderList.getOrElse(i) { "" })
-            editor.putInt("CODE_$i", requestCodeList.getOrElse(i) { 0 })
+    private fun saveData() {
+        val e = getSharedPreferences("MedicinePrefs", Context.MODE_PRIVATE).edit()
+        e.putInt("COUNT", list.size)
+        for (i in list.indices) {
+            e.putString("ITEM_$i", list.getOrElse(i) { "" })
+            e.putInt("CODE_$i", codes.getOrElse(i) { 0 })
         }
-        editor.apply()
+        e.apply()
     }
 
-    private fun loadSavedReminders() {
-        val prefs = getSharedPreferences("MedicinePrefs", Context.MODE_PRIVATE)
-        val count = prefs.getInt("COUNT", 0)
-        reminderList.clear()
-        requestCodeList.clear()
-        for (i in 0 until count) {
-            val item = prefs.getString("ITEM_$i", null)
-            val code = prefs.getInt("CODE_$i", 0)
-            if (item != null) {
-                reminderList.add(item)
-                requestCodeList.add(code)
+    private fun loadData() {
+        val p = getSharedPreferences("MedicinePrefs", Context.MODE_PRIVATE)
+        list.clear(); codes.clear()
+        for (i in 0 until p.getInt("COUNT", 0)) {
+            p.getString("ITEM_$i", null)?.let { list.add(it); codes.add(p.getInt("CODE_$i", 0)) }
+        }
+        adapter.notifyDataSetChanged()
+    }
+
+    private fun askPerm() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            val pm = Manifest.permission.POST_NOTIFICATIONS
+            if (ContextCompat.checkSelfPermission(this, pm) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(pm), 101)
             }
         }
-        adapter.notifyDataSetChanged()
     }
-
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+}
