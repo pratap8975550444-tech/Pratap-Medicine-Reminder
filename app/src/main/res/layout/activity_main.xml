@@ -1,48 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://android.com"
-    android:layout_width="match_parent"
+        android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center_horizontal">
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etMedicineName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="1. औषधाचे नाव (उदा. Pacimol)"
+        android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/etDosage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="2. डोस प्रमाण (उदा. 500 mg)"
+        android:layout_marginBottom="8dp" />
 
     <TextView
+        android:id="@+id/tvSelectedTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="तुमची प्रोफाईल तयार करा"
-        android:textSize="22sp"
+        android:text="3. वेळ निवडलेली नाही"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:layout_marginBottom="20dp"/>
-
-    <ImageView
-        android:id="@+id/ivProfilePic"
-        android:layout_width="110dp"
-        android:layout_height="110dp"
-        android:src="@android:drawable/ic_menu_camera"
-        android:background="#E0E0E0"
-        android:scaleType="centerCrop"
-        android:layout_marginBottom="16dp"/>
-
-    <EditText
-        android:id="@+id/etUserName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="पूर्ण नाव टाका"
-        android:inputType="textPersonName"
-        android:layout_marginBottom="12dp"/>
-
-    <EditText
-        android:id="@+id/etUserAge"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="वय टाका"
-        android:inputType="number"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="8dp" />
 
     <Button
-        android:id="@+id/btnSaveProfile"
+        android:id="@+id/btnPickTime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="प्रोफाईल सेव्ह करा आणि पुढे जा"/>
+        android:text="वेळ निवडा (Select Time)" />
+
+    <Button
+        android:id="@+id/btnSetReminder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="औषध आणि रिमाइंडर सेव्ह करा"
+        android:layout_marginBottom="12dp" />
+
+    <ListView
+        android:id="@+id/lvReminders"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
 </LinearLayout>
