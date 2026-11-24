@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         val userAge = profilePref.getString("userAge", "")
         supportActionBar?.title = "$userName ($userAge वर्षे)"
 
-        // थेट कोटलिनमधूनच तिन्ही बॉक्स आणि बटणे तयार करणे (XML ची गरज नाही)
+        // थेट कोटलिनमधूनच तिन्ही बॉक्स आणि बटणे तयार करणे
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(40, 40, 40, 40)
@@ -139,9 +139,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showEditDialog(position: Int) {
-        val currentText = reminderList[position]
+        val currentText = reminderList.getOrElse(position) { "" }
         val mainParts = currentText.split(" | वेळ: ")
-        val nameAndDose = mainParts.split(" - ")
+        val firstPart = mainParts.getOrElse(0) { "" }
+        val nameAndDose = firstPart.split(" - ")
 
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -164,7 +165,7 @@ class MainActivity : AppCompatActivity() {
                 val newDose = inputDose.text.toString().trim()
                 val newTime = inputTime.text.toString().trim()
                 if (newName.isNotEmpty() && newDose.isNotEmpty()) {
-                    reminderList[position] = "$newName - $newDose | वेळ: $newTime"
+                    reminderList.set(position, "$newName - $newDose | वेळ: $newTime")
                     adapter.notifyDataSetChanged()
                     saveReminders()
                 }
@@ -210,7 +211,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun cancelReminder(position: Int) {
-        val requestCode = requestCodeList[position]
+        val requestCode = requestCodeList.getOrElse(position) { 0 }
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = PendingIntent.getBroadcast(
             this, requestCode, Intent(this, ReminderReceiver::class.java),
@@ -229,8 +230,8 @@ class MainActivity : AppCompatActivity() {
         val editor = prefs.edit()
         editor.putInt("COUNT", reminderList.size)
         for (i in reminderList.indices) {
-            editor.putString("ITEM_$i", reminderList[i])
-            editor.putInt("CODE_$i", requestCodeList[i])
+            editor.putString("ITEM_$i", reminderList.getOrElse(i) { "" })
+            editor.putInt("CODE_$i", requestCodeList.getOrElse(i) { 0 })
         }
         editor.apply()
     }
@@ -254,8 +255,3 @@ class MainActivity : AppCompatActivity() {
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
-            }
-        }
-    }
-}
